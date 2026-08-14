@@ -33,10 +33,6 @@ const links = [
 	const spacer = document.getElementById('site-nav-spacer');
 
 	if (sentinel && nav && spacer) {
-		// Measured while nav is still in its normal (tall, un-stuck) flow —
-		// `.is-stuck` shrinks the nav's own padding, so reading offsetHeight
-		// *after* toggling the class would reserve the wrong (shorter) space
-		// in the spacer and cause a jump right at the scroll threshold.
 		let naturalHeight = nav.offsetHeight;
 
 		const observer = new IntersectionObserver(

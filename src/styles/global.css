@@ -33,6 +33,7 @@ svg {
 /* Theme tokens */
 :root {
 	--color-bg: #ffffff;
+	--color-white: #ffffff;
 	--color-text: #272727;
 	--color-text-muted: #4b5563;
 	--color-accent: #3245ff;
@@ -109,5 +110,30 @@ body {
 @media (prefers-reduced-motion: reduce) {
 	.fade-up-in {
 		animation: none;
+	}
+}
+
+/* Scroll-triggered fade-up reveal — for content below the fold, where a
+   load-time animation (like .fade-up-in above) would already be finished
+   by the time it scrolls into view. See the observer in Layout.astro. */
+[data-reveal] {
+	opacity: 0;
+	transform: translateY(20px);
+	transition:
+		opacity 0.6s ease-out,
+		transform 0.6s ease-out;
+	transition-delay: var(--reveal-delay, 0s);
+}
+
+[data-reveal].is-visible {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	[data-reveal] {
+		opacity: 1;
+		transform: none;
+		transition: none;
 	}
 }
