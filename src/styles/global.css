@@ -51,15 +51,6 @@ svg {
 	--section-spacing: clamp(3rem, 8vw, 6rem);
 }
 
-@media (prefers-color-scheme: dark) {
-	:root {
-		--color-bg: #0b0e14;
-		--color-text: #f3f4f6;
-		--color-text-muted: #9ca3af;
-		--color-border: #1f2937;
-	}
-}
-
 body {
 	background: var(--color-bg);
 	color: var(--color-text);
