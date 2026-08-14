@@ -25,7 +25,8 @@ svg {
 	--color-accent: #3245ff;
 	--color-border: #e5e7eb;
 
-	--font-sans: Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial, sans-serif;
+	--font-sans: 'Montserrat', Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial,
+		sans-serif;
 
 	--container-width: 960px;
 	--section-spacing: clamp(3rem, 8vw, 6rem);
