@@ -1,0 +1,64 @@
+/* Reset */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+
+img,
+svg {
+	display: block;
+	max-width: 100%;
+}
+
+/* Theme tokens */
+:root {
+	--color-bg: #ffffff;
+	--color-text: #111827;
+	--color-text-muted: #4b5563;
+	--color-accent: #3245ff;
+	--color-border: #e5e7eb;
+
+	--font-sans: Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial, sans-serif;
+
+	--container-width: 960px;
+	--section-spacing: clamp(3rem, 8vw, 6rem);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--color-bg: #0b0e14;
+		--color-text: #f3f4f6;
+		--color-text-muted: #9ca3af;
+		--color-border: #1f2937;
+	}
+}
+
+body {
+	background: var(--color-bg);
+	color: var(--color-text);
+	font-family: var(--font-sans);
+	line-height: 1.5;
+}
+
+/* Shared section layout */
+.section {
+	padding: var(--section-spacing) 1.5rem;
+	scroll-margin-top: 2rem;
+}
+
+.section__inner {
+	max-width: var(--container-width);
+	margin: 0 auto;
+}
+
+.section__title {
+	font-size: clamp(1.5rem, 3vw, 2rem);
+	margin: 0 0 1.5rem;
+}
