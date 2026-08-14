@@ -5,6 +5,10 @@
 	box-sizing: border-box;
 }
 
+html {
+	scroll-behavior: smooth;
+}
+
 html,
 body {
 	margin: 0;
@@ -29,17 +33,20 @@ svg {
 /* Theme tokens */
 :root {
 	--color-bg: #ffffff;
-	--color-text: #111827;
+	--color-text: #272727;
 	--color-text-muted: #4b5563;
 	--color-accent: #3245ff;
 	--color-border: #e5e7eb;
+	--color-blue: #0073ff;
+	--color-sand: #fdf8f4;
+	--color-black: #272727;
 
 	--font-sans: 'Montserrat', Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial,
 		sans-serif;
 	/* TODO: apply where needed, e.g. headings — not yet used anywhere */
 	--font-hurin: 'Hurin', var(--font-sans);
 
-	--container-width: 960px;
+	--container-width: 1100px;
 	--section-spacing: clamp(3rem, 8vw, 6rem);
 }
 
@@ -68,9 +75,39 @@ body {
 .section__inner {
 	max-width: var(--container-width);
 	margin: 0 auto;
+	width: 100%;
 }
 
 .section__title {
-	font-size: clamp(1.5rem, 3vw, 2rem);
+	font-size: clamp(1rem, 3vw, 1.2rem);
 	margin: 0 0 1.5rem;
+	color: var(--color-blue);
+	text-align: right;
+}
+
+::selection {
+	background: var(--color-blue);
+	color: #fff;
+}
+
+/* Fade-up-in entrance animation */
+@keyframes fade-up-in {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.fade-up-in {
+	animation: fade-up-in 0.6s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.fade-up-in {
+		animation: none;
+	}
 }

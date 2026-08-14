@@ -1,11 +1,17 @@
 ---
-// TODO: content — name, title/tagline, headshot or graphic, CTA links
+import Nav from './Nav.astro';
+import logo from '../images/logo.png';
 ---
 
 <section id="hero" class="section hero">
 	<div class="section__inner hero__inner">
-		<h1>Your Name</h1>
-		<p class="hero__tagline">Tagline / what you do goes here.</p>
+		<img class="hero__logo fade-up-in" src={logo.src} width="40" height="auto" alt="Logo" />
+		<h1 class="fade-up-in" style="animation-delay: 0.15s;">
+			Front-end <br>
+			developer and <br>
+			designer<span>.</span>
+		</h1>
+		<Nav />
 	</div>
 </section>
 
@@ -14,21 +20,27 @@
 		min-height: 90vh;
 		display: flex;
 		align-items: center;
+		line-height: 1;
+		background-color: var(--color-sand);
 	}
 
 	.hero__inner {
-		text-align: center;
+		text-align: left;
 		margin-inline: auto;
 	}
 
-	.hero h1 {
-		font-size: clamp(2.5rem, 6vw, 4rem);
-		margin: 0 0 0.5rem;
+	.hero__logo {
+		margin-bottom: 1.5rem;
+		margin-top: 40px;
 	}
 
-	.hero__tagline {
-		font-size: clamp(1.1rem, 2vw, 1.4rem);
-		color: var(--color-text-muted);
-		margin: 0;
+	.hero h1 {
+		font-size: clamp(4rem, 10vw, 8rem);
+		margin: 0 0 0.5rem;
+		font-family: var(--font-hurin);
+		font-weight: 400;
+		span{
+			color: var(--color-blue);
+		}
 	}
 </style>

@@ -1,14 +1,18 @@
 ---
+import logo from '../images/logo.png';
+
 const links = [
-	{ href: '#about', label: 'About' },
-	{ href: '#projects', label: 'Projects' },
-	{ href: '#contact', label: 'Contact' },
+	{ href: '#about', label: 'readme' },
+	{ href: '#projects', label: 'projects' },
+	{ href: '#contact', label: 'contact' },
 ];
 ---
 
-<header class="nav">
+<div class="nav-sentinel"></div>
+<header class="nav fade-up-in" id="site-nav" style="animation-delay: 0.3s;">
 	<div class="nav__inner">
 		<nav>
+			<img class="hero__logo" src={logo.src} width="20" height="auto" alt="Logo" />
 			<ul class="nav__links">
 				{
 					links.map((link) => (
@@ -21,28 +25,82 @@ const links = [
 		</nav>
 	</div>
 </header>
+<div class="nav-spacer" id="site-nav-spacer"></div>
+
+<script>
+	const sentinel = document.querySelector('.nav-sentinel');
+	const nav = document.getElementById('site-nav');
+	const spacer = document.getElementById('site-nav-spacer');
+
+	if (sentinel && nav && spacer) {
+		// Measured while nav is still in its normal (tall, un-stuck) flow —
+		// `.is-stuck` shrinks the nav's own padding, so reading offsetHeight
+		// *after* toggling the class would reserve the wrong (shorter) space
+		// in the spacer and cause a jump right at the scroll threshold.
+		let naturalHeight = nav.offsetHeight;
+
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				const stuck = entry.boundingClientRect.top < 0;
+				spacer.style.height = stuck ? `${naturalHeight}px` : '0px';
+				nav.classList.toggle('is-stuck', stuck);
+			},
+			{ threshold: 0 },
+		);
+		observer.observe(sentinel);
+
+		window.addEventListener('resize', () => {
+			if (!nav.classList.contains('is-stuck')) {
+				naturalHeight = nav.offsetHeight;
+			}
+		});
+	}
+</script>
 
 <style>
-	.nav {
-		position: sticky;
+	.nav-sentinel {
+		height: 0;
+	}
+
+	.nav-spacer {
+		height: 0;
+	}
+
+	.nav{
+		img{
+			display: none;
+		}
+
+		nav {
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+		}
+	}
+
+	.nav.is-stuck {
+		position: fixed;
 		top: 0;
-		z-index: 10;
-		background: var(--color-bg);
+		left: 0;
+		right: 0;
+		z-index: 50;
+		background-color: var(--color-sand);
+		display: flex;
+		img{
+			display: block;
+		}
+
+		.nav__inner {
+			justify-content: flex-start;
+		}
 	}
 
 	.nav__inner {
 		max-width: var(--container-width);
 		margin: 0 auto;
-		padding: 1rem 1.5rem;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-	}
-
-	.nav__brand {
-		font-weight: 600;
-		color: var(--color-text);
-		text-decoration: none;
 	}
 
 	.nav__links {
@@ -50,15 +108,21 @@ const links = [
 		display: flex;
 		gap: 1.5rem;
 		margin: 0;
-		padding: 0;
+		padding: 100px 0 0;
+	}
+
+	.nav.is-stuck .nav__links {
+		padding: 1rem 1.5rem;
 	}
 
 	.nav__links a {
-		color: var(--color-text-muted);
-		text-decoration: none;
+		color: var(--color-black);
+		text-decoration: underline;
+		font-family: var(--font-hurin);
+		font-size: 18px;
 	}
 
 	.nav__links a:hover {
-		color: var(--color-text);
+		color: var(--color-blue);
 	}
 </style>
