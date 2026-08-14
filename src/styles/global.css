@@ -17,6 +17,15 @@ svg {
 	max-width: 100%;
 }
 
+/* Local fonts */
+@font-face {
+	font-family: 'Hurin';
+	src: url('../fonts/Hurin-Regular.woff') format('woff');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
 /* Theme tokens */
 :root {
 	--color-bg: #ffffff;
@@ -27,6 +36,8 @@ svg {
 
 	--font-sans: 'Montserrat', Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial,
 		sans-serif;
+	/* TODO: apply where needed, e.g. headings — not yet used anywhere */
+	--font-hurin: 'Hurin', var(--font-sans);
 
 	--container-width: 960px;
 	--section-spacing: clamp(3rem, 8vw, 6rem);
