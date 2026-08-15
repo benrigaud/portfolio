@@ -1,55 +1,613 @@
 ---
-// TODO: content — replace with real projects (title, description, link, image/tags)
+import figmaIcon from '../icons/icon-figma.svg?raw';
+import astroIcon from '../icons/icon-astro.svg?raw';
+import reactIcon from '../icons/icon-react.svg?raw';
+import htmlIcon from '../icons/icon-html.svg?raw';
+import cssIcon from '../icons/icon-css.svg?raw';
+import jsIcon from '../icons/icon-js.svg?raw';
+import illustratorIcon from '../icons/icon-illustrator.svg?raw';
+
+// TODO: swap description / demoHref / githubHref / images placeholders for the real thing
 const projects = [
-	{ title: 'Project One', description: 'Short description goes here.', href: '#' },
-	{ title: 'Project Two', description: 'Short description goes here.', href: '#' },
-	{ title: 'Project Three', description: 'Short description goes here.', href: '#' },
+	{
+		title: 'Avinut Ecommerce',
+		description: 'A custom Shopify storefront built for Avinut, covering everything from product pages to checkout.',
+		demoHref: '#',
+		githubHref: '#',
+		images: 3,
+		facets: [{ type: ['Design', 'Development'], icons: ['Figma', 'React'] }],
+	},
+	{
+		title: 'Avinut Logo Redesign',
+		description: 'A full brand refresh for Avinut, starting from the logo and extending into a small identity system.',
+		demoHref: '#',
+		githubHref: '#',
+		images: 3,
+		facets: [{ type: 'Design', icons: ['illustrator'] }],
+	},
+	{
+		title: 'Gobecom Website',
+		description: 'A marketing site for Gobecom, designed in Figma and built as a fast, static HTML/CSS/JS front end.',
+		demoHref: '#',
+		githubHref: '#',
+		images: 3,
+		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'html', 'css', 'js'] }],
+	},
+	{
+		title: 'Benr Rigaud Portfolio',
+		description: 'This portfolio itself — designed in Figma and built with Astro, HTML, CSS and vanilla JS.',
+		demoHref: '#',
+		githubHref: '#',
+		images: 3,
+		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'html', 'css', 'js'] }],
+	},
 ];
+
+const facetTypes = (type) => (Array.isArray(type) ? type : [type]);
+const facetLabel = (type) => facetTypes(type).join(' + ');
+const facetFilterKeys = (type) => facetTypes(type).map((t) => t.toLowerCase()).join(' ');
+
+const slugify = (str) => str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const facetSlug = (type) =>
+	facetTypes(type)
+		.map(slugify)
+		.sort()
+		.join('-');
+
+const filters = ['All', 'Design', 'Development'];
+
+const placeholderImage = (title, index) => {
+	const label = `${title} — ${index}`;
+	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480"><rect width="640" height="480" fill="#dbe9fe"/><text x="320" y="240" font-family="Montserrat, Arial, sans-serif" font-size="24" font-weight="600" fill="#272727" text-anchor="middle" dominant-baseline="middle">${label}</text></svg>`;
+	return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+};
+
+const icons = {
+	figma: figmaIcon,
+	astro: astroIcon,
+	react: reactIcon,
+	html: htmlIcon,
+	css: cssIcon,
+	js: jsIcon,
+	illustrator: illustratorIcon,
+};
+
+// Flattened, JSON-serializable copy of the data the popup needs — read by the
+// client script and matched back up via data-project-index / data-facet-index.
+const modalData = projects.map((project) => ({
+	title: project.title,
+	description: project.description,
+	demoHref: project.demoHref,
+	githubHref: project.githubHref,
+	images: Array.from({ length: project.images ?? 0 }, (_, idx) => placeholderImage(project.title, idx + 1)),
+	facets: project.facets.map((facet) => ({
+		label: facetLabel(facet.type),
+		iconsHtml: facet.icons.map((icon) => icons[icon.toLowerCase()] || '').join(''),
+	})),
+}));
+// Escape "<" so no string (icon markup, description, …) can prematurely close the <script> tag.
+const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 ---
 
 <section id="projects" class="section projects">
 	<div class="section__inner">
 		<h2 class="section__title">projects</h2>
-		<div class="projects__grid">
+		<p class="projects__filter" data-project-filter>
+			<span class="projects__filter-label">Filter:</span>
 			{
-				projects.map((project) => (
-					<a class="project-card" href={project.href}>
-						<h3>{project.title}</h3>
-						<p>{project.description}</p>
-					</a>
+				filters.map((filter) => (
+					<button
+						type="button"
+						class={`projects__filter-btn${filter === 'All' ? ' is-active' : ''}`}
+						data-filter={filter.toLowerCase()}
+					>
+						{filter.toLowerCase()}
+					</button>
+				))
+			}
+		</p>
+		<div class="projects__list">
+			{
+				projects.map((project, i) => (
+					<article class="project" data-reveal style={`--reveal-delay: ${i * 0.1}s;`}>
+						<div class="project__grid">
+							{project.facets.map((facet, fi) => (
+								<button
+									type="button"
+									class="project-card"
+									data-facet-types={facetFilterKeys(facet.type)}
+									data-project-index={i}
+									data-facet-index={fi}
+								>
+									<p class="project-card__label">{facetLabel(facet.type)}</p>
+									<span class={`project-card__media project-card__media--${facetSlug(facet.type)}`}>
+										{/* TODO: swap for a real screenshot / design image */}
+									</span>
+									<span class="project-card__footer">
+										<span class="project-card__title">{project.title}</span>
+										<span class="project-card__icons">
+											{facet.icons.map((icon) => <Fragment set:html={icons[icon.toLowerCase()]} />)}
+										</span>
+									</span>
+								</button>
+							))}
+						</div>
+					</article>
 				))
 			}
 		</div>
 	</div>
+
+	<script type="application/json" id="projects-data" set:html={modalDataJson} />
+
+	<dialog class="project-modal" data-project-modal>
+		<button type="button" class="project-modal__close" data-modal-close aria-label="Close">×</button>
+		<p class="project-modal__type" data-modal-type />
+		<h3 class="project-modal__title" data-modal-title />
+		<div class="project-modal__icons" data-modal-icons />
+		<p class="project-modal__description" data-modal-description />
+		<div class="project-modal__gallery" data-modal-gallery />
+		<p class="project-modal__links">
+			<a class="project-modal__link" data-modal-demo target="_blank" rel="noopener noreferrer">
+				Live demo
+			</a>
+			<a class="project-modal__link" data-modal-github target="_blank" rel="noopener noreferrer">
+				GitHub
+			</a>
+		</p>
+	</dialog>
+
+	<dialog class="project-lightbox" data-project-lightbox>
+		<button type="button" class="project-lightbox__close" data-lightbox-close aria-label="Close image">×</button>
+		<img class="project-lightbox__image" data-lightbox-image alt="" />
+	</dialog>
 </section>
 
+<script>
+	// Filters project cards by facet type ("design" / "development").
+	// "all" clears the filter and shows everything.
+	const filterBar = document.querySelector('[data-project-filter]');
+	const filterButtons = document.querySelectorAll('[data-project-filter] [data-filter]');
+	const projectEls = document.querySelectorAll('.project');
+
+	if (filterBar && filterButtons.length) {
+		let activeFilter = null;
+
+		const applyFilter = () => {
+			projectEls.forEach((project) => {
+				let anyVisible = false;
+
+				project.querySelectorAll('.project-card').forEach((card) => {
+					const types = (card.dataset.facetTypes || '').split(' ');
+					const visible = !activeFilter || types.includes(activeFilter);
+					card.classList.toggle('is-hidden', !visible);
+					if (visible) anyVisible = true;
+				});
+
+				project.classList.toggle('is-hidden', !anyVisible);
+			});
+		};
+
+		filterButtons.forEach((button) => {
+			button.addEventListener('click', () => {
+				const value = button.dataset.filter;
+				activeFilter = value === 'all' ? null : value;
+
+				filterButtons.forEach((btn) => {
+					btn.classList.toggle('is-active', btn === button);
+				});
+
+				applyFilter();
+			});
+		});
+	}
+
+	// Project popup: clicking a facet card opens a modal with that project's
+	// title, type, icons, description, a gallery (click a thumbnail to
+	// magnify), and live-demo / GitHub links.
+	const dataEl = document.getElementById('projects-data');
+	const modalData = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
+
+	const dialog = document.querySelector('[data-project-modal]');
+	const cards = document.querySelectorAll('.project-card');
+
+	if (dialog && cards.length && modalData.length) {
+		const modalType = dialog.querySelector('[data-modal-type]');
+		const modalTitle = dialog.querySelector('[data-modal-title]');
+		const modalIcons = dialog.querySelector('[data-modal-icons]');
+		const modalDescription = dialog.querySelector('[data-modal-description]');
+		const modalGallery = dialog.querySelector('[data-modal-gallery]');
+		const modalDemo = dialog.querySelector('[data-modal-demo]');
+		const modalGithub = dialog.querySelector('[data-modal-github]');
+
+		const lightbox = document.querySelector('[data-project-lightbox]');
+		const lightboxImage = lightbox?.querySelector('[data-lightbox-image]');
+
+		cards.forEach((card) => {
+			card.addEventListener('click', () => {
+				const project = modalData[Number(card.dataset.projectIndex)];
+				const facet = project?.facets[Number(card.dataset.facetIndex)];
+				if (!project || !facet || !modalType || !modalTitle || !modalIcons || !modalDescription || !modalGallery) return;
+
+				modalType.textContent = facet.label;
+				modalTitle.textContent = project.title;
+				modalIcons.innerHTML = facet.iconsHtml;
+				modalDescription.textContent = project.description;
+				if (modalDemo) modalDemo.href = project.demoHref || '#';
+				if (modalGithub) modalGithub.href = project.githubHref || '#';
+
+				modalGallery.innerHTML = '';
+				project.images.forEach((src, n) => {
+					const thumb = document.createElement('button');
+					thumb.type = 'button';
+					thumb.className = 'project-modal__thumb';
+					thumb.setAttribute('aria-label', `Enlarge image ${n + 1}`);
+					thumb.dataset.fullSrc = src;
+
+					const img = document.createElement('img');
+					img.src = src;
+					img.alt = `${project.title} — screenshot ${n + 1}`;
+					img.loading = 'lazy';
+					thumb.appendChild(img);
+
+					modalGallery.appendChild(thumb);
+				});
+
+				dialog.showModal();
+			});
+		});
+
+		dialog.querySelectorAll('[data-modal-close]').forEach((btn) => {
+			btn.addEventListener('click', () => dialog.close());
+		});
+
+		// Click on the dialog's own backdrop area (not its content) closes it.
+		dialog.addEventListener('click', (event) => {
+			if (event.target === dialog) dialog.close();
+		});
+
+		modalGallery?.addEventListener('click', (event) => {
+			const thumb = event.target instanceof Element ? event.target.closest('.project-modal__thumb') : null;
+			if (!thumb || !lightbox || !lightboxImage) return;
+			lightboxImage.src = thumb.dataset.fullSrc || '';
+			lightboxImage.alt = thumb.querySelector('img')?.alt || '';
+			lightboxImage.classList.remove('is-zoomed');
+			lightbox.classList.remove('is-zoomed');
+			lightbox.showModal();
+		});
+
+		if (lightbox) {
+			lightbox.querySelectorAll('[data-lightbox-close]').forEach((btn) => {
+				btn.addEventListener('click', () => {
+					lightbox.close();
+				});
+			});
+
+			lightbox.addEventListener('click', (event) => {
+				if (event.target === lightbox) lightbox.close();
+			});
+
+			// Click the image itself to zoom in (scroll to pan); click again to fit.
+			// Resizing it for real (rather than a CSS transform) is what makes the
+			// container's overflow — and therefore scrolling to pan — actually work.
+			lightboxImage?.addEventListener('click', (event) => {
+				event.stopPropagation();
+				const zoomed = lightboxImage.classList.toggle('is-zoomed');
+				lightbox.classList.toggle('is-zoomed', zoomed);
+
+				if (zoomed && lightboxImage.naturalWidth) {
+					lightboxImage.style.width = `${lightboxImage.naturalWidth * 2}px`;
+					lightboxImage.style.height = `${lightboxImage.naturalHeight * 2}px`;
+					// Center the view on the now-larger image instead of snapping to
+					// the top-left corner.
+					requestAnimationFrame(() => {
+						lightbox.scrollLeft = (lightbox.scrollWidth - lightbox.clientWidth) / 2;
+						lightbox.scrollTop = (lightbox.scrollHeight - lightbox.clientHeight) / 2;
+					});
+				} else {
+					lightboxImage.style.width = '';
+					lightboxImage.style.height = '';
+				}
+			});
+
+			// If Escape is pressed while the lightbox is open, let it handle Escape
+			// (and close) on its own — stop the project modal underneath from also
+			// closing on the same keypress. A second Escape then closes the modal.
+			dialog.addEventListener('cancel', (event) => {
+				if (lightbox.open) event.preventDefault();
+			});
+		}
+	}
+</script>
+
 <style>
-	.projects__grid {
+	.projects__filter {
+		display: flex;
+		align-items: center;
+		gap: 40px;
+		margin: 0 0 50px;
+		font-family: var(--font-sans);
+		font-size: 16px;
+		font-weight: 600;
+	}
+
+	.projects__filter-label {
+		color: var(--color-black);
+	}
+
+	.projects__filter-btn {
+		padding: 0;
+		border: none;
+		background: none;
+		font: inherit;
+		color: var(--color-black);
+		text-decoration: underline;
+		cursor: pointer;
+	}
+
+	.projects__filter-btn:hover {
+		color: var(--color-blue);
+	}
+
+	.projects__filter-btn.is-active {
+		color: var(--color-blue);
+	}
+
+	.project.is-hidden,
+	.project-card.is-hidden {
+		display: none;
+	}
+
+	.projects__list {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-		gap: 1.5rem;
+		grid-template-columns: 1fr;
+		gap: clamp(3rem, 6vw, 4.5rem);
+	}
+
+	@media (min-width: 768px) {
+		.projects__list {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	.project__grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: 2.5rem;
 	}
 
 	.project-card {
-		display: block;
-		padding: 1.5rem;
-		border: 1px solid var(--color-border);
-		border-radius: 12px;
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		margin: 0;
+		padding: 0;
+		border: none;
+		background: none;
 		color: inherit;
 		text-decoration: none;
-		transition: border-color 0.2s;
+		text-align: inherit;
+		font: inherit;
+		cursor: pointer;
 	}
 
-	.project-card:hover {
-		border-color: var(--color-accent);
+	.project-card__label {
+		margin: 0 0 0.75rem;
+		color: var(--color-blue);
+		font-weight: 600;
+		text-align: right;
 	}
 
-	.project-card h3 {
-		margin: 0 0 0.5rem;
+	.project-card__media {
+		display: block;
+		aspect-ratio: 16 / 9;
+		transition: transform 0.2s ease;
 	}
 
-	.project-card p {
+	.project-card__media--development {
+		background: #dbe9fe;
+	}
+
+	.project-card__media--design {
+		background: var(--color-white);
+		border: 1px solid var(--color-border);
+	}
+
+	.project-card__media--design-development {
+		background: linear-gradient(135deg, #dbe9fe 50%, var(--color-white) 50%);
+		border: 1px solid var(--color-border);
+	}
+
+	.project-card:hover .project-card__media {
+		transform: translateY(-4px);
+	}
+
+	.project-card__footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-top: 1rem;
+	}
+
+	.project-card__title {
+		font-weight: 700;
+		font-size: 1.15rem;
+		color: var(--color-black);
+	}
+
+	.project-card__icons {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		flex-shrink: 0;
+		color: var(--color-black);
+	}
+
+	.project-card__icons svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	.project-modal {
+		position: fixed;
+		inset: 0;
+		margin: auto;
+		width: 95vw;
+		height: 90vh;
+		max-width: none;
+		overflow-y: auto;
+		border: none;
+		padding: 2.5rem;
+		color: var(--color-black);
+		background: var(--color-white);
+	}
+
+	.project-modal::backdrop {
+		background: rgba(0, 0, 0, 0.5);
+	}
+
+	.project-modal__close {
+		position: absolute;
+		top: 1rem;
+		right: 1rem;
+		border: none;
+		background: none;
+		font-size: 1.75rem;
+		line-height: 1;
+		color: var(--color-black);
+		cursor: pointer;
+	}
+
+	.project-modal__type {
+		margin: 0 0 0.25rem;
+		color: var(--color-blue);
+		font-weight: 600;
+	}
+
+	.project-modal__title {
+		margin: 0 0 1rem;
+		font-size: 1.5rem;
+	}
+
+	.project-modal__icons {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-bottom: 1.25rem;
+		color: var(--color-black);
+	}
+
+	.project-modal__icons svg {
+		width: 22px;
+		height: 22px;
+	}
+
+	.project-modal__description {
+		margin: 0 0 1.5rem;
+		line-height: 1.5;
+	}
+
+	.project-modal__gallery {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.project-modal__thumb {
+		aspect-ratio: 4 / 3;
+		overflow: hidden;
+		border: 1px solid var(--color-border);
+		background: #dbe9fe;
+		cursor: zoom-in;
+		padding: 0;
+		transition: transform 0.2s ease;
+	}
+
+	.project-modal__thumb:hover {
+		transform: scale(1.03);
+	}
+
+	.project-modal__thumb img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.project-modal__links {
+		display: flex;
+		gap: 1.5rem;
 		margin: 0;
-		color: var(--color-text-muted);
+	}
+
+	.project-modal__link {
+		color: var(--color-blue);
+		font-weight: 600;
+		text-decoration: underline;
+	}
+
+	.project-modal__link:hover {
+		color: var(--color-black);
+	}
+
+	.project-lightbox {
+		position: fixed;
+		inset: 0;
+		margin: 0;
+		width: 100vw;
+		height: 100vh;
+		max-width: none;
+		max-height: none;
+		border: none;
+		padding: 0;
+		background: rgba(0, 0, 0, 0.8);
+	}
+
+	.project-lightbox[open] {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.project-lightbox.is-zoomed[open] {
+		align-items: flex-start;
+		justify-content: flex-start;
+		overflow: auto;
+	}
+
+	.project-lightbox__image {
+		display: block;
+		max-width: min(85vw, 800px);
+		max-height: 85vh;
+		width: auto;
+		height: auto;
+		cursor: zoom-in;
+	}
+
+	.project-lightbox__image.is-zoomed {
+		/* Actual width/height are set inline by the script (2x natural size) —
+		   a real size change, not a transform, so the container can actually
+		   scroll to reveal the parts that no longer fit. */
+		max-width: none;
+		max-height: none;
+		cursor: zoom-out;
+		/* Centers it while it's still smaller than the viewport; once it grows
+		   past that, auto margins collapse to 0 so the overflow starts flush
+		   at the scroll origin instead of being clipped and unreachable. */
+		margin: auto;
+	}
+
+	.project-lightbox__close {
+		position: absolute;
+		top: 1.5rem;
+		right: 1.5rem;
+		border: none;
+		background: none;
+		color: var(--color-white);
+		font-size: 2rem;
+		line-height: 1;
+		cursor: pointer;
 	}
 </style>
