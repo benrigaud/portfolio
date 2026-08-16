@@ -7,6 +7,11 @@ import cssIcon from '../icons/icon-css.svg?raw';
 import jsIcon from '../icons/icon-js.svg?raw';
 import illustratorIcon from '../icons/icon-illustrator.svg?raw';
 
+import avinutMain from '../images/projects/avinut/main.webp';
+import avinutCompare from '../images/projects/avinut/compare.webp';
+import avinutIcon from '../images/projects/avinut/icon.webp';
+import avinutMono from '../images/projects/avinut/mono.webp';
+
 // TODO: swap description / demoHref / githubHref / images placeholders for the real thing
 const projects = [
 	{
@@ -22,7 +27,7 @@ const projects = [
 		description: 'A full brand refresh for Avinut, starting from the logo and extending into a small identity system.',
 		demoHref: '#',
 		githubHref: '#',
-		images: 3,
+		images: [avinutMain.src, avinutCompare.src, avinutIcon.src, avinutMono.src],
 		facets: [{ type: 'Design', icons: ['illustrator'] }],
 	},
 	{
@@ -79,7 +84,9 @@ const modalData = projects.map((project) => ({
 	description: project.description,
 	demoHref: project.demoHref,
 	githubHref: project.githubHref,
-	images: Array.from({ length: project.images ?? 0 }, (_, idx) => placeholderImage(project.title, idx + 1)),
+	images: Array.isArray(project.images)
+		? project.images
+		: Array.from({ length: project.images ?? 0 }, (_, idx) => placeholderImage(project.title, idx + 1)),
 	facets: project.facets.map((facet) => ({
 		label: facetLabel(facet.type),
 		iconsHtml: facet.icons.map((icon) => icons[icon.toLowerCase()] || '').join(''),
