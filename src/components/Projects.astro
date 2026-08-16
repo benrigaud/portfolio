@@ -9,42 +9,52 @@ import illustratorIcon from '../icons/icon-illustrator.svg?raw';
 
 import avinutMain from '../images/projects/avinut/main.webp';
 import avinutCompare from '../images/projects/avinut/compare.webp';
-import avinutIcon from '../images/projects/avinut/icon.webp';
+import avinutIcon from '../images/projects/avinut/icon.png';
 import avinutMono from '../images/projects/avinut/mono.webp';
+
+import avinutWebsiteHomeFull from '../images/projects/avinut-website/home-full.webp';
+import avinutWebsiteProductHome from '../images/projects/avinut-website/product-home.webp';
+import avinutWebsiteShot from '../images/projects/avinut-website/shot.webp';
+
+import gobeconFull from '../images/projects/gobecon/full.webp';
+import gobeconShot from '../images/projects/gobecon/shot.webp';
+
+import portfolioFull from '../images/projects/portfolio/full.webp';
+import portfolioShot from '../images/projects/portfolio/shot.webp';
 
 // TODO: swap description / demoHref / githubHref / images placeholders for the real thing
 const projects = [
 	{
 		title: 'Avinut Ecommerce',
 		description: 'A custom Shopify storefront built for Avinut, covering everything from product pages to checkout.',
-		demoHref: '#',
-		githubHref: '#',
-		images: 3,
-		facets: [{ type: ['Design', 'Development'], icons: ['Figma', 'React'] }],
+		demoHref: '',
+		githubHref: '',
+		images: [avinutWebsiteHomeFull.src, avinutWebsiteProductHome.src],
+		facets: [{ type: ['Design', 'Development'], icons: ['Figma', 'React'], image: avinutWebsiteShot.src }],
 	},
 	{
 		title: 'Avinut Logo Redesign',
 		description: 'A full brand refresh for Avinut, starting from the logo and extending into a small identity system.',
-		demoHref: '#',
-		githubHref: '#',
-		images: [avinutMain.src, avinutCompare.src, avinutIcon.src, avinutMono.src],
-		facets: [{ type: 'Design', icons: ['illustrator'] }],
+		demoHref: '',
+		githubHref: '',
+		images: [avinutIcon.src, avinutCompare.src, avinutMain.src, avinutMono.src],
+		facets: [{ type: 'Design', icons: ['illustrator'], image: avinutIcon.src }],
 	},
 	{
-		title: 'Gobecom Website',
-		description: 'A marketing site for Gobecom, designed in Figma and built as a fast, static HTML/CSS/JS front end.',
-		demoHref: '#',
-		githubHref: '#',
-		images: 3,
-		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'html', 'css', 'js'] }],
+		title: 'Gobecon Website',
+		description: 'A marketing site for Gobecon, designed in Figma and built as a fast, static HTML/CSS/JS front end.',
+		demoHref: '',
+		githubHref: '',
+		images: [gobeconFull.src],
+		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'html', 'css', 'js'], image: gobeconShot.src }],
 	},
 	{
-		title: 'Benr Rigaud Portfolio',
+		title: 'Ben Rigaud Portfolio',
 		description: 'This portfolio itself — designed in Figma and built with Astro, HTML, CSS and vanilla JS.',
-		demoHref: '#',
-		githubHref: '#',
-		images: 3,
-		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'html', 'css', 'js'] }],
+		demoHref: '',
+		githubHref: 'https://github.com/benrigaud/portfolio',
+		images: [portfolioFull.src],
+		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'astro'], image: portfolioShot.src }],
 	},
 ];
 
@@ -128,7 +138,14 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 								>
 									<p class="project-card__label">{facetLabel(facet.type)}</p>
 									<span class={`project-card__media project-card__media--${facetSlug(facet.type)}`}>
-										{/* TODO: swap for a real screenshot / design image */}
+										{
+											facet.image ? (
+												<img src={facet.image} alt={`${project.title} preview`} loading="lazy" />
+											) : (
+												// TODO: swap for a real screenshot / design image
+												<Fragment />
+											)
+										}
 									</span>
 									<span class="project-card__footer">
 										<span class="project-card__title">{project.title}</span>
@@ -153,8 +170,9 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 		<h3 class="project-modal__title" data-modal-title />
 		<div class="project-modal__icons" data-modal-icons />
 		<p class="project-modal__description" data-modal-description />
+		<p class="project-modal__gallery-hint">Click to enlarge</p>
 		<div class="project-modal__gallery" data-modal-gallery />
-		<p class="project-modal__links">
+		<p class="project-modal__links" data-modal-links>
 			<a class="project-modal__link" data-modal-demo target="_blank" rel="noopener noreferrer">
 				Live demo
 			</a>
@@ -226,6 +244,7 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 		const modalGallery = dialog.querySelector('[data-modal-gallery]');
 		const modalDemo = dialog.querySelector('[data-modal-demo]');
 		const modalGithub = dialog.querySelector('[data-modal-github]');
+		const modalLinks = dialog.querySelector('[data-modal-links]');
 
 		const lightbox = document.querySelector('[data-project-lightbox]');
 		const lightboxImage = lightbox?.querySelector('[data-lightbox-image]');
@@ -240,8 +259,24 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 				modalTitle.textContent = project.title;
 				modalIcons.innerHTML = facet.iconsHtml;
 				modalDescription.textContent = project.description;
-				if (modalDemo) modalDemo.href = project.demoHref || '#';
-				if (modalGithub) modalGithub.href = project.githubHref || '#';
+				let anyLinkVisible = false;
+				if (modalDemo) {
+					modalDemo.hidden = !project.demoHref;
+					if (project.demoHref) {
+						modalDemo.href = project.demoHref;
+						anyLinkVisible = true;
+					}
+				}
+				if (modalGithub) {
+					modalGithub.hidden = !project.githubHref;
+					if (project.githubHref) {
+						modalGithub.href = project.githubHref;
+						anyLinkVisible = true;
+					}
+				}
+				if (modalLinks) modalLinks.hidden = !anyLinkVisible;
+
+				modalGallery.classList.toggle('is-design-only', facet.label === 'Design');
 
 				modalGallery.innerHTML = '';
 				project.images.forEach((src, n) => {
@@ -408,7 +443,16 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 	.project-card__media {
 		display: block;
 		aspect-ratio: 16 / 9;
+		overflow: hidden;
 		transition: transform 0.2s ease;
+	}
+
+	.project-card__media img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: top;
 	}
 
 	.project-card__media--development {
@@ -420,9 +464,18 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 		border: 1px solid var(--color-border);
 	}
 
+	.project-card__media--design img {
+		object-position: center;
+	}
+
 	.project-card__media--design-development {
 		background: linear-gradient(135deg, #dbe9fe 50%, var(--color-white) 50%);
 		border: 1px solid var(--color-border);
+	}
+
+	.project-card__media--design,
+	.project-card__media--design-development {
+		aspect-ratio: 1 / 0.8;
 	}
 
 	.project-card:hover .project-card__media {
@@ -467,7 +520,7 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 		border: none;
 		padding: 2.5rem;
 		color: var(--color-black);
-		background: var(--color-white);
+		background: var(--color-sand);
 	}
 
 	.project-modal::backdrop {
@@ -515,32 +568,64 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 		line-height: 1.5;
 	}
 
+	.project-modal__gallery-hint {
+		margin: 0 0 0.5rem;
+		color: var(--color-text-muted, #6b7280);
+		font-size: 0.85rem;
+	}
+
 	.project-modal__gallery {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-		gap: 0.75rem;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 1.5rem;
 		margin-bottom: 1.5rem;
 	}
 
-	.project-modal__thumb {
+	/* A lone image shouldn't stretch across (or sit left in) the 2-col grid — center it instead.
+	   Whole selector wrapped in :global() — Astro's scoping doesn't support :global()
+	   nested inside :has(), so it has to apply at the top level here. */
+	:global(.project-modal__gallery:has(> .project-modal__thumb:only-child)) {
+		grid-template-columns: 1fr;
+		justify-items: center;
+	}
+
+	:global(.project-modal__gallery:has(> .project-modal__thumb:only-child) .project-modal__thumb) {
+		width: 100%;
+		max-width: 560px;
+	}
+
+	/* :global() — these thumb buttons/images are created at runtime via
+	   document.createElement(), not by the Astro template, so they never get
+	   the scoped data-astro-cid attribute a normal (scoped) rule here would
+	   require to match. */
+	:global(.project-modal__thumb) {
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		appearance: none;
 		aspect-ratio: 4 / 3;
 		overflow: hidden;
-		border: 1px solid var(--color-border);
-		background: #dbe9fe;
-		cursor: zoom-in;
 		padding: 0;
-		transition: transform 0.2s ease;
+		background-color: #fff;
+		border: solid 1px #fff;
+		border-radius: 0;
+		outline: none;
+		box-shadow: none;
+		cursor: zoom-in;
 	}
 
-	.project-modal__thumb:hover {
-		transform: scale(1.03);
-	}
-
-	.project-modal__thumb img {
+	:global(.project-modal__thumb img) {
 		display: block;
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		object-position: top;
+	}
+
+	/* "Design"-only facets (no combined Development) get contain + centered,
+	   matching the card preview's treatment for the same case. */
+	.project-modal__gallery.is-design-only :global(.project-modal__thumb img) {
+		object-fit: contain;
+		object-position: center;
 	}
 
 	.project-modal__links {
@@ -596,9 +681,14 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 	.project-lightbox__image.is-zoomed {
 		/* Actual width/height are set inline by the script (2x natural size) —
 		   a real size change, not a transform, so the container can actually
-		   scroll to reveal the parts that no longer fit. */
-		max-width: none;
-		max-height: none;
+		   scroll to reveal the parts that no longer fit. !important beats the
+		   global `img { max-width: 100% }` reset so zoomed images can genuinely
+		   exceed the page width instead of being capped back down to it. */
+		max-width: 100% !important;
+		max-height: none !important;
+		width: 100% !important;
+		height: auto !important;
+		object-fit: contain;
 		cursor: zoom-out;
 		/* Centers it while it's still smaller than the viewport; once it grows
 		   past that, auto margins collapse to 0 so the overflow starts flush

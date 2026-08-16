@@ -21,6 +21,11 @@ svg {
 	max-width: 100%;
 }
 
+:focus,
+:focus-visible {
+	outline: none;
+}
+
 /* Local fonts */
 @font-face {
 	font-family: 'Hurin';
