@@ -494,6 +494,7 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 		font-weight: 700;
 		font-size: 1.15rem;
 		color: var(--color-black);
+		transition: color 0.2s ease;
 	}
 
 	.project-card__icons {
@@ -507,6 +508,35 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 	.project-card__icons svg {
 		width: 20px;
 		height: 20px;
+	}
+
+	/* Icons are inlined SVGs (via set:html) with their own hardcoded
+	   stroke/fill (not currentColor), so recolor those attributes directly on
+	   hover instead of relying on `color` inheritance. The "white" fills are
+	   inner logo detail (e.g. the JS/HTML/CSS marks) and are left alone.
+	   :global() on the svg-and-below part — like `.project-modal__thumb`
+	   above, that markup is injected raw and never gets the scoped
+	   data-astro-cid attribute a normal (scoped) selector here would require. */
+	.project-card:hover .project-card__title {
+		color: var(--color-blue);
+	}
+
+	.project-card:hover .project-card__icons :global(svg [fill="#272727"]),
+	.project-card:hover .project-card__icons :global(svg [fill="black"]) {
+		fill: var(--color-blue);
+	}
+
+	.project-card:hover .project-card__icons :global(svg [stroke="#272727"]) {
+		stroke: var(--color-blue);
+	}
+
+	.project-card__icons :global(svg [fill="#272727"]),
+	.project-card__icons :global(svg [fill="black"]) {
+		transition: fill 0.2s ease;
+	}
+
+	.project-card__icons :global(svg [stroke="#272727"]) {
+		transition: stroke 0.2s ease;
 	}
 
 	.project-modal {
