@@ -706,14 +706,11 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 		width: auto;
 		height: auto;
 		cursor: zoom-in;
+		object-fit: cover;
+		object-position: top;
 	}
 
 	.project-lightbox__image.is-zoomed {
-		/* Actual width/height are set inline by the script (2x natural size) —
-		   a real size change, not a transform, so the container can actually
-		   scroll to reveal the parts that no longer fit. !important beats the
-		   global `img { max-width: 100% }` reset so zoomed images can genuinely
-		   exceed the page width instead of being capped back down to it. */
 		max-width: 100% !important;
 		max-height: none !important;
 		width: 100% !important;
