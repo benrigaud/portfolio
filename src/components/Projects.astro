@@ -15,6 +15,7 @@ import avinutMono from '../images/projects/avinut/mono.webp';
 import avinutWebsiteHomeFull from '../images/projects/avinut-website/home-full.webp';
 import avinutWebsiteProductHome from '../images/projects/avinut-website/product-home.webp';
 import avinutWebsiteShot from '../images/projects/avinut-website/shot.webp';
+import avinutAnimation from '../images/projects/avinut-website/avinut-animation.gif';
 
 import gobeconFull from '../images/projects/gobecon/full.webp';
 import gobeconShot from '../images/projects/gobecon/shot.webp';
@@ -140,7 +141,17 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 									<span class={`project-card__media project-card__media--${facetSlug(facet.type)}`}>
 										{
 											facet.image ? (
-												<img src={facet.image} alt={`${project.title} preview`} loading="lazy" />
+												<>
+													<img src={facet.image} alt={`${project.title} preview`} loading="lazy" />
+													{project.title === 'Avinut Ecommerce' && (
+														<img
+															class="project-card__animation"
+															src={avinutAnimation.src}
+															alt=""
+															aria-hidden="true"
+														/>
+													)}
+												</>
 											) : (
 												// TODO: swap for a real screenshot / design image
 												<Fragment />
@@ -441,10 +452,26 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 	}
 
 	.project-card__media {
+		position: relative;
 		display: block;
 		aspect-ratio: 16 / 9;
 		overflow: hidden;
 		transition: transform 0.2s ease;
+	}
+
+	.project-card__animation {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s ease;
+	}
+
+	.project-card:hover .project-card__animation {
+		opacity: 1;
 	}
 
 	.project-card__media img {
