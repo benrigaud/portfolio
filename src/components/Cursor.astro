@@ -1,0 +1,246 @@
+<div class="cursor" aria-hidden="true"></div>
+
+<style>
+	/* Custom cursor is opt-in per device (see script) — only replaces the
+	   system cursor once JS confirms a desktop-sized fine pointer, so touch
+	   devices, small viewports, and no-JS visits keep the native cursor.
+	   !important because form elements carry their own UA cursor that plain
+	   inheritance won't override. */
+	:global(html.has-custom-cursor),
+	:global(html.has-custom-cursor *) {
+		cursor: none !important;
+	}
+
+	.cursor {
+		position: fixed;
+		inset: auto;
+		top: 0;
+		left: 0;
+		margin: 0;
+		border: none;
+		padding: 0;
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		background: var(--color-blue);
+		/* [popover]'s UA stylesheet defaults to overflow: auto — without this
+		   override, the pulse ring below scaling past the box edges reads as
+		   scrollable overflow and draws a real scrollbar on the cursor. */
+		overflow: visible;
+		pointer-events: none;
+		z-index: 9999;
+		opacity: 0;
+		/* Size grows via width/height, not a scale() transform: Chrome
+		   rasterizes a mix-blend-mode element into a bitmap before blending,
+		   and stretching that bitmap with scale() is what pixelates the
+		   circle on hover. Animating the real box keeps it crisp. */
+		transition:
+			opacity 0.2s ease,
+			background-color 0.2s ease,
+			width 0.25s var(--ease-out),
+			height 0.25s var(--ease-out);
+		will-change: transform;
+	}
+
+	.cursor.is-visible {
+		opacity: 1;
+	}
+
+	/* Idle "breathing" pulse, always running — a ring that expands out from
+	   the dot and fades. Lives on ::before (its own transform stack) rather
+	   than the dot itself, so it never fights the JS-driven translate() on
+	   .cursor or the width/height hover transition above. */
+	.cursor::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: 50%;
+		background: var(--color-blue);
+		animation: cursor-pulse 2s ease-out infinite;
+	}
+
+	@keyframes cursor-pulse {
+		0% {
+			transform: scale(1);
+			opacity: 0.5;
+		}
+		100% {
+			transform: scale(2.2);
+			opacity: 0;
+		}
+	}
+
+	/* Over links/buttons the dot swells and inverts whatever it's sitting on
+	   instead of just changing color — mix-blend-mode: difference against a
+	   white fill negates the pixels underneath (blue -> orange, black ->
+	   white, white -> black), so it reads on any background it crosses. */
+	.cursor.is-hovering {
+		width: 50px;
+		height: 50px;
+		background: #fff;
+		mix-blend-mode: difference;
+	}
+
+	.cursor.is-down {
+		width: 22px;
+		height: 22px;
+	}
+
+	/* Zoomed into a lightbox image: the dot morphs into an X (drawn as a
+	   plus-shaped background rotated 45deg) to signal "click to zoom back
+	   out" instead of the swelling hover treatment. */
+	.cursor::after {
+		content: '';
+		position: absolute;
+		inset: 8px;
+		background:
+			linear-gradient(currentColor, currentColor) center / 100% 2px no-repeat,
+			linear-gradient(currentColor, currentColor) center / 2px 100% no-repeat;
+		color: var(--color-blue);
+		opacity: 0;
+		transform: rotate(45deg) scale(0);
+		transition:
+			transform 0.2s var(--ease-out),
+			opacity 0.2s ease;
+	}
+
+	.cursor.is-x {
+		background: transparent;
+	}
+
+	.cursor.is-x::before {
+		opacity: 0;
+	}
+
+	.cursor.is-x::after {
+		opacity: 1;
+		transform: rotate(45deg) scale(1);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.cursor::before {
+			animation: none;
+			display: none;
+		}
+	}
+</style>
+
+<script>
+	// Desktop only: a precise pointer alone (pointer: fine) still matches an
+	// iPad with a trackpad, so gate on viewport width too — matching the
+	// 1024px breakpoint the rest of the site already treats as "desktop"
+	// (see .hero__icons in Hero.astro). Checked once at load, same as the
+	// site's other desktop-only behaviour.
+	const isDesktop = window.matchMedia('(pointer: fine) and (min-width: 1024px)').matches;
+
+	if (isDesktop) {
+		const cursor = document.querySelector<HTMLElement>('.cursor');
+
+		if (cursor) {
+			document.documentElement.classList.add('has-custom-cursor');
+
+			// Native <dialog> (and the popover API) render in the browser's top
+			// layer, which paints above *everything* in normal stacking order —
+			// z-index can't compete with it, which is why the cursor used to
+			// disappear behind an open project modal. Promoting the cursor into
+			// the top layer too, and re-promoting it whenever a dialog opens,
+			// keeps it on top of those.
+			if ('showPopover' in cursor) {
+				cursor.setAttribute('popover', 'manual');
+				try {
+					cursor.showPopover();
+				} catch {
+					// Ignore — worst case the cursor falls back to normal z-index
+					// stacking.
+				}
+
+				const promoteCursor = () => {
+					try {
+						if (cursor.matches(':popover-open')) cursor.hidePopover();
+						cursor.showPopover();
+					} catch {
+						// Ignore.
+					}
+				};
+
+				const dialogObserver = new MutationObserver((mutations) => {
+					for (const mutation of mutations) {
+						if ((mutation.target as HTMLDialogElement).open) promoteCursor();
+					}
+				});
+
+				document.querySelectorAll('dialog').forEach((dialog) => {
+					dialogObserver.observe(dialog, { attributes: true, attributeFilter: ['open'] });
+				});
+			}
+
+			// The lightbox toggles .is-zoomed on itself when its image is
+			// clicked to zoom in/out — mirror that onto the cursor so it can
+			// swap from a dot to an X (see Projects.astro's lightboxImage click
+			// handler).
+			const lightbox = document.querySelector<HTMLElement>('[data-project-lightbox]');
+			if (lightbox) {
+				const syncZoomCursor = () => cursor.classList.toggle('is-x', lightbox.classList.contains('is-zoomed'));
+				syncZoomCursor();
+				new MutationObserver(syncZoomCursor).observe(lightbox, { attributes: true, attributeFilter: ['class'] });
+			}
+
+			const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			// Reduced motion: cursor still swaps shape, but tracks the pointer
+			// 1:1 instead of trailing behind it.
+			const posEase = prefersReducedMotion ? 1 : 0.2;
+
+			const interactiveSelector = 'a, button, [role="button"], input, textarea, select';
+
+			let mouseX = window.innerWidth / 2;
+			let mouseY = window.innerHeight / 2;
+			let cursorX = mouseX;
+			let cursorY = mouseY;
+
+			window.addEventListener('mousemove', (e) => {
+				mouseX = e.clientX;
+				mouseY = e.clientY;
+				cursor.classList.add('is-visible');
+			});
+
+			// Hide while the pointer is outside the viewport (relatedTarget is
+			// null only when the pointer actually leaves the document).
+			document.addEventListener('mouseout', (e) => {
+				if (!e.relatedTarget) cursor.classList.remove('is-visible');
+			});
+
+			window.addEventListener('mousedown', () => {
+				cursor.classList.add('is-down');
+			});
+			window.addEventListener('mouseup', () => {
+				cursor.classList.remove('is-down');
+			});
+
+			document.addEventListener(
+				'mouseover',
+				(e) => {
+					if ((e.target as Element)?.closest?.(interactiveSelector)) cursor.classList.add('is-hovering');
+				},
+				true,
+			);
+			document.addEventListener(
+				'mouseout',
+				(e) => {
+					const related = e.relatedTarget as Element | null;
+					if ((e.target as Element)?.closest?.(interactiveSelector) && !related?.closest?.(interactiveSelector)) {
+						cursor.classList.remove('is-hovering');
+					}
+				},
+				true,
+			);
+
+			function tick() {
+				cursorX += (mouseX - cursorX) * posEase;
+				cursorY += (mouseY - cursorY) * posEase;
+				cursor.style.transform = `translate(${cursorX}px, ${cursorY}px) translate(-50%, -50%)`;
+				requestAnimationFrame(tick);
+			}
+			requestAnimationFrame(tick);
+		}
+	}
+</script>
