@@ -54,6 +54,8 @@ svg {
 
 	--container-width: 1100px;
 	--section-spacing: clamp(3rem, 8vw, 6rem);
+
+	--ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 body {
@@ -76,10 +78,11 @@ body {
 }
 
 .section__title {
-	font-size: clamp(1rem, 3vw, 1.2rem);
+	font-size: 22px;
 	margin: 0 0 1.5rem;
 	color: var(--color-blue);
-	text-align: right;
+	font-family: var(--font-hurin);
+	text-align: left;
 }
 
 ::selection {

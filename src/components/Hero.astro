@@ -1,15 +1,30 @@
 ---
 import Nav from './Nav.astro';
 import logo from '../images/logo.png';
+import iconShopify from '../images/icons/icon-shopify.svg';
+import iconFigma from '../images/icons/icon-figma.svg';
+import iconGithub from '../images/icons/icon-github.svg';
+import iconJs from '../images/icons/icon-js.svg';
+import iconWordpress from '../images/icons/icon-wordpress.svg';
 ---
 
 <section id="hero" class="section hero">
+	<div class="hero__icons" aria-hidden="true">
+		<img class="hero__icon hero__icon--shopify fade-up-in" style="animation-delay: 0.4s;" src={iconShopify.src} width="81" height="81" alt="" />
+		<img class="hero__icon hero__icon--figma fade-up-in" style="animation-delay: 0.48s;" src={iconFigma.src} width="89" height="89" alt="" />
+		<img class="hero__icon hero__icon--github fade-up-in" style="animation-delay: 0.56s;" src={iconGithub.src} width="84" height="84" alt="" />
+		<img class="hero__icon hero__icon--js fade-up-in" style="animation-delay: 0.64s;" src={iconJs.src} width="103" height="103" alt="" />
+		<img class="hero__icon hero__icon--wordpress fade-up-in" style="animation-delay: 0.72s;" src={iconWordpress.src} width="86" height="86" alt="" />
+	</div>
 	<div class="section__inner hero__inner">
-		<img class="hero__logo fade-up-in" src={logo.src} width="40" height="auto" alt="Logo" />
-		<h1 class="fade-up-in" style="animation-delay: 0.15s;">
-			Front-end <br>
-			developer and <br>
-			designer<span>.</span>
+		<div class="hero__top fade-up-in">
+			<img class="hero__logo" src={logo.src} width="40" height="auto" alt="Logo" />
+			<span class="hero__brand">benrigaud<span class="hero__brand-dot">*</span></span>
+		</div>
+		<h1 class="hero__heading">
+			<span class="hero__line" style="--line-index: 0;">Front-end</span>
+			<span class="hero__line" style="--line-index: 1;">developer and</span>
+			<span class="hero__line" style="--line-index: 2;">designer<span class="hero__dot">.</span></span>
 		</h1>
 		<Nav />
 	</div>
@@ -17,6 +32,7 @@ import logo from '../images/logo.png';
 
 <style>
 	.hero {
+		position: relative;
 		min-height: 90vh;
 		display: flex;
 		align-items: center;
@@ -27,11 +43,81 @@ import logo from '../images/logo.png';
 	.hero__inner {
 		text-align: left;
 		margin-inline: auto;
+		/* Figma insets the row content 15px inside the 1100px container on
+		   both sides, rather than running it flush to the container edge. */
+		padding-inline: 15px;
 	}
 
-	.hero__logo {
-		margin-bottom: 1.5rem;
+	/* Decorative logo scatter filling the empty space beside the heading on
+	   wide screens — hidden below 1024px, where the heading itself grows
+	   into that space instead. Positioned off .hero (not .hero__inner) so
+	   they can spread past the 1100px content column toward the viewport
+	   edge, matching the reference. */
+	.hero__icons {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.hero__icon {
+		position: absolute;
+		width: auto;
+		height: auto;
+	}
+
+	.hero__icon--shopify {
+		top: 20%;
+		left: 69%;
+		transform: rotate(-6deg);
+	}
+
+	.hero__icon--figma {
+		top: 29%;
+		left: 88%;
+		transform: rotate(4deg);
+	}
+
+	.hero__icon--github {
+		top: 48%;
+		left: 80%;
+		transform: rotate(-3deg);
+	}
+
+	.hero__icon--js {
+		top: 63%;
+		right: 0;
+		transform: rotate(-8deg);
+	}
+
+	.hero__icon--wordpress {
+		top: 73%;
+		left: 75%;
+		transform: rotate(5deg);
+	}
+
+	@media (max-width: 1024px) {
+		.hero__icons {
+			display: none;
+		}
+	}
+
+	.hero__top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 		margin-top: 40px;
+		margin-bottom: 1.5rem;
+	}
+
+	.hero__brand {
+		font-family: var(--font-hurin);
+		font-weight: 800;
+		font-size: 22px;
+		color: var(--color-black);
+	}
+
+	.hero__brand-dot {
+		color: var(--color-blue);
 	}
 
 	.hero h1 {
@@ -39,8 +125,35 @@ import logo from '../images/logo.png';
 		margin: 0 0 0.5rem;
 		font-family: var(--font-hurin);
 		font-weight: 400;
-		span{
-			color: var(--color-blue);
+	}
+
+	/* Each line enters on its own beat instead of the heading fading in as
+	   one block — first impression of the page, so it earns a bit more than
+	   the sitewide .fade-up-in treatment (stronger curve, per-line stagger). */
+	.hero__line {
+		display: block;
+		animation: hero-line-in 0.8s var(--ease-out) both;
+		animation-delay: calc(0.15s + var(--line-index) * 80ms);
+	}
+
+	.hero__dot {
+		color: var(--color-blue);
+	}
+
+	@keyframes hero-line-in {
+		from {
+			opacity: 0;
+			transform: translateY(30px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hero__line {
+			animation: none;
 		}
 	}
 </style>

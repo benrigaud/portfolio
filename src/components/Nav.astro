@@ -28,29 +28,31 @@ const links = [
 <div class="nav-spacer" id="site-nav-spacer"></div>
 
 <script>
-	const sentinel = document.querySelector('.nav-sentinel');
-	const nav = document.getElementById('site-nav');
-	const spacer = document.getElementById('site-nav-spacer');
-
-	if (sentinel && nav && spacer) {
-		let naturalHeight = nav.offsetHeight;
-
-		const observer = new IntersectionObserver(
-			([entry]) => {
-				const stuck = entry.boundingClientRect.top < 0;
-				spacer.style.height = stuck ? `${naturalHeight}px` : '0px';
-				nav.classList.toggle('is-stuck', stuck);
-			},
-			{ threshold: 0 },
-		);
-		observer.observe(sentinel);
-
-		window.addEventListener('resize', () => {
-			if (!nav.classList.contains('is-stuck')) {
-				naturalHeight = nav.offsetHeight;
-			}
-		});
-	}
+	// Sticky header: disabled. This observer is what added the "is-stuck"
+	// class (see the .nav.is-stuck rule below) — re-enable by restoring it.
+	// const sentinel = document.querySelector('.nav-sentinel');
+	// const nav = document.getElementById('site-nav');
+	// const spacer = document.getElementById('site-nav-spacer');
+	//
+	// if (sentinel && nav && spacer) {
+	// 	let naturalHeight = nav.offsetHeight;
+	//
+	// 	const observer = new IntersectionObserver(
+	// 		([entry]) => {
+	// 			const stuck = entry.boundingClientRect.top < 0;
+	// 			spacer.style.height = stuck ? `${naturalHeight}px` : '0px';
+	// 			nav.classList.toggle('is-stuck', stuck);
+	// 		},
+	// 		{ threshold: 0 },
+	// 	);
+	// 	observer.observe(sentinel);
+	//
+	// 	window.addEventListener('resize', () => {
+	// 		if (!nav.classList.contains('is-stuck')) {
+	// 			naturalHeight = nav.offsetHeight;
+	// 		}
+	// 	});
+	// }
 </script>
 
 <style>
@@ -80,7 +82,8 @@ const links = [
 		left: 0;
 		right: 0;
 		z-index: 50;
-		background-color: var(--color-sand);
+		background-color: var(--color-white);
+		border-bottom: 1px solid var(--color-border);
 		display: flex;
 		img{
 			display: block;
@@ -92,6 +95,7 @@ const links = [
 	}
 
 	.nav__inner {
+		width: 100%;
 		max-width: var(--container-width);
 		margin: 0 auto;
 		display: flex;
@@ -116,6 +120,7 @@ const links = [
 		text-decoration: underline;
 		font-family: var(--font-hurin);
 		font-size: 18px;
+		transition: color 0.2s ease;
 	}
 
 	.nav__links a:hover {

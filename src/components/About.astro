@@ -7,7 +7,7 @@ const githubHref = 'https://github.com/benrigaud';
 
 <section id="about" class="section about">
 	<div class="section__inner">
-		<h2 class="section__title">readme</h2>
+		<p class="section__title" data-reveal>About</p>
 		<h3 class="about_name" data-reveal>Ben Rigaud</h3>
 		<p class="about_bio" data-reveal style="--reveal-delay: 0.1s;">Hi, I’m Ben. For the past 7+ years, I’ve been designing and building things for the web. I’m happiest somewhere between Figma and the browser—creating thoughtful interfaces and bringing them to life with code.</p>
 		<ul class="about_socials" data-reveal style="--reveal-delay: 0.2s;">			
@@ -49,6 +49,12 @@ const githubHref = 'https://github.com/benrigaud';
 		color: #fff;
 		font-family: var(--font-hurin);
 		font-weight: 400;
+	}
+
+	@media (max-width: 640px) {
+		.about_name{
+			font-size: 40px;
+		}
 	}
 	.about_bio{
 		font-size: 18px;
