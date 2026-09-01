@@ -86,37 +86,6 @@
 		height: 22px;
 	}
 
-	/* Zoomed into a lightbox image: the dot morphs into an X (drawn as a
-	   plus-shaped background rotated 45deg) to signal "click to zoom back
-	   out" instead of the swelling hover treatment. */
-	.cursor::after {
-		content: '';
-		position: absolute;
-		inset: 8px;
-		background:
-			linear-gradient(currentColor, currentColor) center / 100% 2px no-repeat,
-			linear-gradient(currentColor, currentColor) center / 2px 100% no-repeat;
-		color: var(--color-blue);
-		opacity: 0;
-		transform: rotate(45deg) scale(0);
-		transition:
-			transform 0.2s var(--ease-out),
-			opacity 0.2s ease;
-	}
-
-	.cursor.is-x {
-		background: transparent;
-	}
-
-	.cursor.is-x::before {
-		opacity: 0;
-	}
-
-	.cursor.is-x::after {
-		opacity: 1;
-		transform: rotate(45deg) scale(1);
-	}
-
 	@media (prefers-reduced-motion: reduce) {
 		.cursor::before {
 			animation: none;
@@ -172,17 +141,6 @@
 				document.querySelectorAll('dialog').forEach((dialog) => {
 					dialogObserver.observe(dialog, { attributes: true, attributeFilter: ['open'] });
 				});
-			}
-
-			// The lightbox toggles .is-zoomed on itself when its image is
-			// clicked to zoom in/out — mirror that onto the cursor so it can
-			// swap from a dot to an X (see Projects.astro's lightboxImage click
-			// handler).
-			const lightbox = document.querySelector<HTMLElement>('[data-project-lightbox]');
-			if (lightbox) {
-				const syncZoomCursor = () => cursor.classList.toggle('is-x', lightbox.classList.contains('is-zoomed'));
-				syncZoomCursor();
-				new MutationObserver(syncZoomCursor).observe(lightbox, { attributes: true, attributeFilter: ['class'] });
 			}
 
 			const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

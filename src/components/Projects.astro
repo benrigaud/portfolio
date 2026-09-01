@@ -107,10 +107,10 @@ const icons = {
 	illustrator: illustratorIcon,
 };
 
-// Gallery/lightbox images are shown small (as modal thumbnails) but can be
-// zoomed to 2x their natural size in the lightbox (see the click handler
-// below), so they're re-encoded rather than aggressively downsized — this
-// keeps zoom detail while still cutting the (often screenshot-sized, and not
+// Gallery/lightbox images are shown small (as modal thumbnails) but the
+// lightbox's hover-magnifier (see the lens code below) crops in at 2.5x, so
+// they're re-encoded rather than aggressively downsized — this keeps
+// magnified detail while still cutting the (often screenshot-sized, and not
 // pre-compressed for the web) source files down.
 const GALLERY_MAX_WIDTH = 1800;
 const GALLERY_QUALITY = 82;
@@ -281,6 +281,7 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 			</svg>
 		</button>
 		<img class="project-lightbox__image" data-lightbox-image alt="" />
+		<div class="project-lightbox__lens" data-lightbox-lens aria-hidden="true"></div>
 		<button type="button" class="project-lightbox__arrow project-lightbox__arrow--next" data-lightbox-next aria-label="Next image">
 			<svg width="14" height="22" viewBox="0 0 14 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 				<path d="M2 1L12 11L2 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -405,6 +406,7 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 
 		const lightbox = document.querySelector('[data-project-lightbox]');
 		const lightboxImage = lightbox?.querySelector('[data-lightbox-image]');
+		const lightboxLens = lightbox?.querySelector('[data-lightbox-lens]');
 		const lightboxPrev = lightbox?.querySelector('[data-lightbox-prev]');
 		const lightboxNext = lightbox?.querySelector('[data-lightbox-next]');
 
@@ -509,10 +511,7 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 
 			lightboxImage.src = image.src;
 			lightboxImage.alt = image.alt;
-			lightboxImage.classList.remove('is-zoomed');
-			lightboxImage.style.width = '';
-			lightboxImage.style.height = '';
-			lightbox.classList.remove('is-zoomed');
+			lightboxLens?.classList.remove('is-active');
 
 			// No point showing nav arrows for a single-image gallery.
 			const hasMultiple = lightboxImages.length > 1;
@@ -538,6 +537,9 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 				if (event.target === lightbox) lightbox.close();
 			});
 
+			// Covers every way the dialog can close (button, backdrop, Escape).
+			lightbox.addEventListener('close', () => lightboxLens?.classList.remove('is-active'));
+
 			lightboxPrev?.addEventListener('click', (event) => {
 				event.stopPropagation();
 				showLightboxImage(lightboxIndex - 1);
@@ -560,28 +562,37 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 				}
 			});
 
-			// Click the image itself to zoom in (scroll to pan); click again to fit.
-			// Resizing it for real (rather than a CSS transform) is what makes the
-			// container's overflow — and therefore scrolling to pan — actually work.
-			lightboxImage?.addEventListener('click', (event) => {
-				event.stopPropagation();
-				const zoomed = lightboxImage.classList.toggle('is-zoomed');
-				lightbox.classList.toggle('is-zoomed', zoomed);
+			// Magnifying-glass hover zoom: a lens follows the pointer over the
+			// image, its background showing a scaled-up crop centered on
+			// wherever the pointer actually is — rather than the old
+			// click-to-enlarge-the-whole-image-and-scroll-to-pan behavior.
+			// Mouse-only: touch devices have no hover to drive it, and the
+			// viewport already allows native pinch-to-zoom as their fallback.
+			if (lightboxImage && lightboxLens && window.matchMedia('(pointer: fine)').matches) {
+				const LENS_SIZE = 240; // keep in sync with the CSS
+				const ZOOM_FACTOR = 2.5;
 
-				if (zoomed && lightboxImage.naturalWidth) {
-					lightboxImage.style.width = `${lightboxImage.naturalWidth * 2}px`;
-					lightboxImage.style.height = `${lightboxImage.naturalHeight * 2}px`;
-					// Center the view on the now-larger image instead of snapping to
-					// the top-left corner.
-					requestAnimationFrame(() => {
-						lightbox.scrollLeft = (lightbox.scrollWidth - lightbox.clientWidth) / 2;
-						lightbox.scrollTop = (lightbox.scrollHeight - lightbox.clientHeight) / 2;
-					});
-				} else {
-					lightboxImage.style.width = '';
-					lightboxImage.style.height = '';
-				}
-			});
+				const moveLens = (event: MouseEvent) => {
+					const rect = lightboxImage.getBoundingClientRect();
+					const x = event.clientX - rect.left;
+					const y = event.clientY - rect.top;
+
+					if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
+						lightboxLens.classList.remove('is-active');
+						return;
+					}
+
+					lightboxLens.classList.add('is-active');
+					lightboxLens.style.left = `${event.clientX - LENS_SIZE / 2}px`;
+					lightboxLens.style.top = `${event.clientY - LENS_SIZE / 2}px`;
+					lightboxLens.style.backgroundImage = `url(${lightboxImage.currentSrc || lightboxImage.src})`;
+					lightboxLens.style.backgroundSize = `${rect.width * ZOOM_FACTOR}px ${rect.height * ZOOM_FACTOR}px`;
+					lightboxLens.style.backgroundPosition = `${LENS_SIZE / 2 - x * ZOOM_FACTOR}px ${LENS_SIZE / 2 - y * ZOOM_FACTOR}px`;
+				};
+
+				lightboxImage.addEventListener('mousemove', moveLens);
+				lightboxImage.addEventListener('mouseleave', () => lightboxLens.classList.remove('is-active'));
+			}
 
 			// If Escape is pressed while the lightbox is open, let it handle Escape
 			// (and close) on its own — stop the project modal underneath from also
@@ -1173,12 +1184,6 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 		justify-content: center;
 	}
 
-	.project-lightbox.is-zoomed[open] {
-		align-items: flex-start;
-		justify-content: flex-start;
-		overflow: auto;
-	}
-
 	.project-lightbox__image {
 		display: block;
 		max-width: min(85vw, 800px);
@@ -1190,17 +1195,28 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 		object-position: top;
 	}
 
-	.project-lightbox__image.is-zoomed {
-		max-width: 100% !important;
-		max-height: none !important;
-		width: 100% !important;
-		height: auto !important;
-		object-fit: contain;
-		cursor: zoom-out;
-		/* Centers it while it's still smaller than the viewport; once it grows
-		   past that, auto margins collapse to 0 so the overflow starts flush
-		   at the scroll origin instead of being clipped and unreachable. */
-		margin: auto;
+	/* Magnifying-glass hover zoom: a circular lens that follows the pointer,
+	   its background set (in JS, per mousemove) to a scaled-up crop of the
+	   lightbox image centered on the pointer. `position: fixed` so its
+	   left/top can be set directly from clientX/clientY. Fine-pointer only —
+	   see the mousemove listener below. */
+	.project-lightbox__lens {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 240px;
+		height: 240px;
+		border: 2px solid rgba(255, 255, 255, 0.8);
+		border-radius: 50%;
+		box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+		background-repeat: no-repeat;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.15s ease;
+	}
+
+	.project-lightbox__lens.is-active {
+		opacity: 1;
 	}
 
 	.project-lightbox__close {
