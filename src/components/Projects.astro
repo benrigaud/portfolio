@@ -238,7 +238,7 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 
 <script>
 	import Swiper from 'swiper';
-	import { Navigation } from 'swiper/modules';
+	import { Navigation, Mousewheel } from 'swiper/modules';
 
 	// Project carousel — one slide per facet card. Below 640px that's one
 	// centered card at a time (full-width, no peek — too little room to
@@ -249,12 +249,20 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 	const sliderEl = document.querySelector('[data-project-slider]');
 	const slider = sliderEl
 		? new Swiper(sliderEl, {
-				modules: [Navigation],
+				modules: [Navigation, Mousewheel],
 				slidesPerView: 1,
 				centeredSlides: true,
 				spaceBetween: 24,
 				watchOverflow: true,
 				grabCursor: true,
+				// Lets a trackpad's horizontal two-finger swipe drive the
+				// slider directly. forceToAxis restricts it to the
+				// horizontal delta only, so an ordinary vertical scroll
+				// (mouse wheel or trackpad) still scrolls the page instead
+				// of being hijacked by the slider.
+				mousewheel: {
+					forceToAxis: true,
+				},
 				navigation: {
 					nextEl: '[data-slider-next]',
 					prevEl: '[data-slider-prev]',
@@ -465,6 +473,7 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 <style>
 	.projects {
 		background-color: var(--color-white);
+		overflow: hidden;
 	}
 
 	.projects__filter {
@@ -555,10 +564,9 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 	}
 
 	.projects-slider {
-		/* Bleeds to the right edge of the browser (cancels out `.section`'s
-		   own 1.5rem side padding); the left edge sits at that same 1.5rem
-		   section padding, same as the rest of the section's content. */
+		overflow: visible;
 		width: 100%;
+		margin-left: 0;
 		margin-right: -1.5rem;
 	}
 
