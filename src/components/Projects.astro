@@ -27,6 +27,15 @@ import gobeconShot from '../images/projects/gobecon/shot.webp';
 import portfolioFull from '../images/projects/portfolio/full.webp';
 import portfolioShot from '../images/projects/portfolio/shot.webp';
 
+// Not a recognized image extension, so Vite hands back a plain hashed URL
+// string rather than an ImageMetadata object (no astro:assets processing —
+// pre-encode video before adding it here; see the git log for the ffmpeg
+// settings used on these).
+import avinutSceneVideo from '../images/scenes/scene-avinut.mp4';
+import avinutLogoSceneVideo from '../images/scenes/scene-avinut-logo.mp4';
+import gobeconSceneVideo from '../images/scenes/scene-gobecon.mp4';
+import portfolioSceneVideo from '../images/scenes/scene-portfolio.mp4';
+
 // TODO: swap description / demoHref / githubHref / images placeholders for the real thing
 const projects = [
 	{
@@ -35,7 +44,7 @@ const projects = [
 		demoHref: 'https://benrigaud.github.io/avinut/',
 		githubHref: 'https://github.com/benrigaud/avinut',
 		images: [avinutWebsiteHomeFull, avinutWebsiteProductHome],
-		facets: [{ type: ['Design', 'Development'], icons: ['Figma', 'React'], image: avinutWebsiteShot }],
+		facets: [{ type: ['Design', 'Development'], icons: ['Figma', 'React'], image: avinutWebsiteShot, video: avinutSceneVideo }],
 	},
 	{
 		title: 'Avinut Logo Redesign',
@@ -43,7 +52,7 @@ const projects = [
 		demoHref: '',
 		githubHref: '',
 		images: [avinutIcon, avinutCompare, avinutMain, avinutMono],
-		facets: [{ type: 'Design', icons: ['illustrator'], image: avinutIcon }],
+		facets: [{ type: 'Design', icons: ['illustrator'], image: avinutIcon, video: avinutLogoSceneVideo }],
 	},
 	{
 		title: 'Gobecon Website',
@@ -51,7 +60,7 @@ const projects = [
 		demoHref: 'https://benrigaud.github.io/gobecon/',
 		githubHref: 'https://github.com/benrigaud/gobecon',
 		images: [gobeconFull],
-		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'html', 'css', 'js'], image: gobeconShot }],
+		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'html', 'css', 'js'], image: gobeconShot, video: gobeconSceneVideo }],
 	},
 	{
 		title: 'Ben Rigaud Portfolio',
@@ -59,7 +68,7 @@ const projects = [
 		demoHref: '',
 		githubHref: 'https://github.com/benrigaud/portfolio',
 		images: [portfolioFull],
-		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'astro'], image: portfolioShot }],
+		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'astro'], image: portfolioShot, video: portfolioSceneVideo }],
 	},
 ];
 
@@ -76,13 +85,11 @@ const facetSlug = (type) =>
 
 const filters = ['All', 'Design', 'Development'];
 
-// Gif-on-hover is disabled for now — flip this back to true to re-enable.
-// Its asset (a 48MB gif) was removed to keep the repo lean; before
-// re-enabling, add back a small, compressed hover-preview asset (an
-// optimized gif or short muted video) and re-add the conditional
-// `<img class="project-card__animation" .../>` this flag used to gate
-// inside the facet.image block below (see git history for the markup).
-const showHoverAnimation = false;
+// Hover preview: cards whose facet has a `video` (see the scene-*.mp4
+// imports above) show a muted, looping clip on hover instead of a gif.
+// Play/pause is driven by JS on card hover (see the script below), so
+// nothing is decoding in the background for cards no one is hovering.
+const showHoverAnimation = true;
 
 const placeholderImage = (title, index) => {
 	const label = `${title} — ${index}`;
@@ -167,14 +174,27 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 									<span class={`project-card__media project-card__media--${facetSlug(facet.type)}`}>
 										{
 											facet.image ? (
-												<Image
-													src={facet.image}
-													alt={`${project.title} preview`}
-													width={Math.min(800, facet.image.width)}
-													format="webp"
-													quality={82}
-													loading="lazy"
-												/>
+												<>
+													<Image
+														src={facet.image}
+														alt={`${project.title} preview`}
+														width={Math.min(800, facet.image.width)}
+														format="webp"
+														quality={82}
+														loading="lazy"
+													/>
+													{showHoverAnimation && facet.video && (
+														<video
+															class="project-card__animation"
+															src={facet.video}
+															muted
+															loop
+															playsinline
+															preload="none"
+															aria-hidden="true"
+														/>
+													)}
+												</>
 											) : (
 												// TODO: swap for a real screenshot / design image
 												<Fragment />
@@ -299,6 +319,24 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 				},
 			})
 		: null;
+
+	// Hover-preview video(s): only load/play while the card is actually
+	// hovered, rather than autoplaying in the background for cards no one
+	// is looking at. Skipped entirely under prefers-reduced-motion.
+	if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		document.querySelectorAll<HTMLVideoElement>('.project-card__animation').forEach((video) => {
+			const card = video.closest('.project-card');
+			if (!card) return;
+
+			card.addEventListener('mouseenter', () => {
+				video.currentTime = 0;
+				video.play().catch(() => {
+					// Ignore — e.g. the card was left before the video was ready.
+				});
+			});
+			card.addEventListener('mouseleave', () => video.pause());
+		});
+	}
 
 	// Filters project slides by facet type ("design" / "development").
 	// "all" clears the filter and shows everything.
