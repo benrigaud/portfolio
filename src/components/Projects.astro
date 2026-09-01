@@ -1,4 +1,6 @@
 ---
+import { Image, getImage } from 'astro:assets';
+
 import figmaIcon from '../icons/icon-figma.svg?raw';
 import astroIcon from '../icons/icon-astro.svg?raw';
 import reactIcon from '../icons/icon-react.svg?raw';
@@ -18,7 +20,6 @@ import avinutMono from '../images/projects/avinut/mono.webp';
 import avinutWebsiteHomeFull from '../images/projects/avinut-website/home-full.webp';
 import avinutWebsiteProductHome from '../images/projects/avinut-website/product-home.webp';
 import avinutWebsiteShot from '../images/projects/avinut-website/shot.webp';
-import avinutAnimation from '../images/projects/avinut-website/avinut-animation.gif';
 
 import gobeconFull from '../images/projects/gobecon/full.webp';
 import gobeconShot from '../images/projects/gobecon/shot.webp';
@@ -33,32 +34,32 @@ const projects = [
 		description: 'A custom Shopify storefront built for Avinut, covering everything from product pages to checkout.',
 		demoHref: 'https://benrigaud.github.io/avinut/',
 		githubHref: 'https://github.com/benrigaud/avinut',
-		images: [avinutWebsiteHomeFull.src, avinutWebsiteProductHome.src],
-		facets: [{ type: ['Design', 'Development'], icons: ['Figma', 'React'], image: avinutWebsiteShot.src }],
+		images: [avinutWebsiteHomeFull, avinutWebsiteProductHome],
+		facets: [{ type: ['Design', 'Development'], icons: ['Figma', 'React'], image: avinutWebsiteShot }],
 	},
 	{
 		title: 'Avinut Logo Redesign',
 		description: 'A full brand refresh for Avinut, starting from the logo and extending into a small identity system.',
 		demoHref: '',
 		githubHref: '',
-		images: [avinutIcon.src, avinutCompare.src, avinutMain.src, avinutMono.src],
-		facets: [{ type: 'Design', icons: ['illustrator'], image: avinutIcon.src }],
+		images: [avinutIcon, avinutCompare, avinutMain, avinutMono],
+		facets: [{ type: 'Design', icons: ['illustrator'], image: avinutIcon }],
 	},
 	{
 		title: 'Gobecon Website',
 		description: 'A marketing site for Gobecon, designed in Figma and built as a fast, static HTML/CSS/JS front end.',
 		demoHref: 'https://benrigaud.github.io/gobecon/',
 		githubHref: 'https://github.com/benrigaud/gobecon',
-		images: [gobeconFull.src],
-		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'html', 'css', 'js'], image: gobeconShot.src }],
+		images: [gobeconFull],
+		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'html', 'css', 'js'], image: gobeconShot }],
 	},
 	{
 		title: 'Ben Rigaud Portfolio',
 		description: 'This portfolio itself — designed in Figma and built with Astro, HTML, CSS and vanilla JS.',
 		demoHref: '',
 		githubHref: 'https://github.com/benrigaud/portfolio',
-		images: [portfolioFull.src],
-		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'astro'], image: portfolioShot.src }],
+		images: [portfolioFull],
+		facets: [{ type: ['Design', 'Development'], icons: ['figma', 'astro'], image: portfolioShot }],
 	},
 ];
 
@@ -76,6 +77,11 @@ const facetSlug = (type) =>
 const filters = ['All', 'Design', 'Development'];
 
 // Gif-on-hover is disabled for now — flip this back to true to re-enable.
+// Its asset (a 48MB gif) was removed to keep the repo lean; before
+// re-enabling, add back a small, compressed hover-preview asset (an
+// optimized gif or short muted video) and re-add the conditional
+// `<img class="project-card__animation" .../>` this flag used to gate
+// inside the facet.image block below (see git history for the markup).
 const showHoverAnimation = false;
 
 const placeholderImage = (title, index) => {
@@ -94,21 +100,41 @@ const icons = {
 	illustrator: illustratorIcon,
 };
 
+// Gallery/lightbox images are shown small (as modal thumbnails) but can be
+// zoomed to 2x their natural size in the lightbox (see the click handler
+// below), so they're re-encoded rather than aggressively downsized — this
+// keeps zoom detail while still cutting the (often screenshot-sized, and not
+// pre-compressed for the web) source files down.
+const GALLERY_MAX_WIDTH = 1800;
+const GALLERY_QUALITY = 82;
+
 // Flattened, JSON-serializable copy of the data the popup needs — read by the
 // client script and matched back up via data-project-index / data-facet-index.
-const modalData = projects.map((project) => ({
-	title: project.title,
-	description: project.description,
-	demoHref: project.demoHref,
-	githubHref: project.githubHref,
-	images: Array.isArray(project.images)
-		? project.images
-		: Array.from({ length: project.images ?? 0 }, (_, idx) => placeholderImage(project.title, idx + 1)),
-	facets: project.facets.map((facet) => ({
-		label: facetLabel(facet.type),
-		iconsHtml: facet.icons.map((icon) => icons[icon.toLowerCase()] || '').join(''),
+const modalData = await Promise.all(
+	projects.map(async (project) => ({
+		title: project.title,
+		description: project.description,
+		demoHref: project.demoHref,
+		githubHref: project.githubHref,
+		images: Array.isArray(project.images)
+			? await Promise.all(
+					project.images.map(async (img) => {
+						const optimized = await getImage({
+							src: img,
+							width: Math.min(GALLERY_MAX_WIDTH, img.width),
+							format: 'webp',
+							quality: GALLERY_QUALITY,
+						});
+						return optimized.src;
+					}),
+				)
+			: Array.from({ length: project.images ?? 0 }, (_, idx) => placeholderImage(project.title, idx + 1)),
+		facets: project.facets.map((facet) => ({
+			label: facetLabel(facet.type),
+			iconsHtml: facet.icons.map((icon) => icons[icon.toLowerCase()] || '').join(''),
+		})),
 	})),
-}));
+);
 // Escape "<" so no string (icon markup, description, …) can prematurely close the <script> tag.
 const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 ---
@@ -141,17 +167,14 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 									<span class={`project-card__media project-card__media--${facetSlug(facet.type)}`}>
 										{
 											facet.image ? (
-												<>
-													<img src={facet.image} alt={`${project.title} preview`} loading="lazy" />
-													{showHoverAnimation && project.title === 'Avinut Ecommerce' && (
-														<img
-															class="project-card__animation"
-															src={avinutAnimation.src}
-															alt=""
-															aria-hidden="true"
-														/>
-													)}
-												</>
+												<Image
+													src={facet.image}
+													alt={`${project.title} preview`}
+													width={Math.min(800, facet.image.width)}
+													format="webp"
+													quality={82}
+													loading="lazy"
+												/>
 											) : (
 												// TODO: swap for a real screenshot / design image
 												<Fragment />
@@ -994,7 +1017,6 @@ const modalDataJson = JSON.stringify(modalData).replace(/</g, '\\u003c');
 		background-color: #fff;
 		border: solid 1px #fff;
 		border-radius: 0;
-		outline: none;
 		box-shadow: none;
 		cursor: zoom-in;
 	}

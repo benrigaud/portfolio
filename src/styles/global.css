@@ -21,9 +21,16 @@ svg {
 	max-width: 100%;
 }
 
-:focus,
-:focus-visible {
+/* Mouse/touch focus stays invisible (no ring on click); keyboard focus
+   (:focus-visible) gets a clear accent-colored ring so tabbing through the
+   site is actually navigable. */
+:focus {
 	outline: none;
+}
+
+:focus-visible {
+	outline: 2px solid var(--color-blue);
+	outline-offset: 2px;
 }
 
 /* Local fonts */
