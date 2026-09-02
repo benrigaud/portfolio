@@ -1,5 +1,7 @@
 ---
+import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
+import astronaut from '../images/misc/404-astronaut.png';
 
 // Matches Layout.astro's own BASE_URL normalization, so this link is correct
 // whether the site is served from the root or a sub-path.
@@ -9,10 +11,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <Layout title="Page not found | Ben Rigaud" description="This page doesn't exist.">
 	<section class="not-found">
 		<div class="section__inner not-found__inner">
-			<p class="not-found__code">404</p>
-			<h1 class="not-found__title">Page not found</h1>
-			<p class="not-found__text">The page you're looking for doesn't exist or has moved.</p>
-			<a class="not-found__link" href={`${base}/`}>Back to home</a>
+			<Image class="not-found__image" src={astronaut} alt="" width={280} loading="eager" />
+			<div class="not-found__content">
+				<p class="not-found__code">404</p>
+				<h1 class="not-found__title">Page not found</h1>
+				<p class="not-found__text">The page you're looking for doesn't exist or has moved.</p>
+				<a class="not-found__link" href={`${base}/`}>Back to home</a>
+			</div>
 		</div>
 	</section>
 </Layout>
@@ -26,7 +31,25 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 	}
 
 	.not-found__inner {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2rem;
 		text-align: center;
+	}
+
+	.not-found__image {
+		width: min(280px, 60vw);
+		height: auto;
+		flex-shrink: 0;
+	}
+
+	@media (min-width: 640px) {
+		.not-found__inner {
+			flex-direction: row;
+			justify-content: center;
+			text-align: left;
+		}
 	}
 
 	.not-found__code {
